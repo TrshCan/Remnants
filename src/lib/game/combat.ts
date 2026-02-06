@@ -13,6 +13,8 @@ export interface PlayerData extends APData {
     name: string;
     hp: number;
     hp_max: number;
+    mp: number;
+    mp_max: number;
     status: string;
 }
 

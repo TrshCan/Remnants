@@ -5,11 +5,14 @@ import {
     ActionType,
     PlayerStateSnapshot,
     ActionResponse,
-    GameEvent
+    GameEvent,
+    normalizeStatus,
+    CombatState
 } from '@/lib/game';
 import { getAPState, calculateCurrentAP } from '@/lib/game/ap';
 import { checkRateLimit } from '@/lib/game/ratelimit';
 import { resolveAction, PlayerData } from '@/lib/game/combat';
+import { PlayerStatus as PrismaPlayerStatus } from '@prisma/client';
 
 const VALID_ACTIONS: ActionType[] = ['attack', 'defend', 'wait', 'look', 'status'];
 
@@ -38,22 +41,24 @@ export async function GET(request: NextRequest) {
         }
 
         const currentAP = calculateCurrentAP(
-            player.ap_current,
-            new Date(player.ap_last_update),
-            player.ap_max,
-            player.ap_debt
+            player.apCurrent,
+            new Date(player.apLastUpdate),
+            player.apMax,
+            player.apDebt
         );
 
         const snapshot: PlayerStateSnapshot = {
             hp: player.hp,
-            hp_max: player.hp_max,
+            hp_max: player.hpMax,
+            mp: player.mp,
+            mp_max: player.mpMax,
             ap: Math.floor(currentAP),
-            ap_max: player.ap_max,
+            ap_max: player.apMax,
             ap_state: getAPState({
-                ap_current: player.ap_current,
-                ap_max: player.ap_max,
-                ap_debt: player.ap_debt,
-                ap_last_update: new Date(player.ap_last_update),
+                ap_current: player.apCurrent,
+                ap_max: player.apMax,
+                ap_debt: player.apDebt,
+                ap_last_update: new Date(player.apLastUpdate),
             }),
             status: player.status,
         };
@@ -102,7 +107,7 @@ export async function POST(request: NextRequest) {
 
         // Check rate limit
         const rateCheck = checkRateLimit(
-            player.last_action_at ? new Date(player.last_action_at) : null
+            player.lastActionAt ? new Date(player.lastActionAt) : null
         );
         if (!rateCheck.allowed) {
             return NextResponse.json(
@@ -120,20 +125,20 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Convert to typed objects
+        // Convert to typed objects for combat system
         const typedPlayer: PlayerData = {
             id: player.id,
             name: player.name,
             hp: player.hp,
-            hp_max: player.hp_max,
-            ap_current: player.ap_current,
-            ap_max: player.ap_max,
-            ap_debt: player.ap_debt,
-            ap_last_update: new Date(player.ap_last_update),
+            hp_max: player.hpMax,
+            ap_current: player.apCurrent,
+            ap_max: player.apMax,
+            ap_debt: player.apDebt,
+            ap_last_update: new Date(player.apLastUpdate),
             status: player.status,
         };
 
-        const combatState = instance.combat_state || {
+        const combatState: CombatState = (instance.combatState as unknown as CombatState) || {
             phase: 'IDLE',
             turn_order: [],
             current_turn_index: 0,
@@ -155,14 +160,14 @@ export async function POST(request: NextRequest) {
             combatState
         );
 
-        // Persist changes
+        // Persist changes (map back to Prisma camelCase)
         await db.updatePlayer(player_id, {
             hp: newPlayer.hp,
-            ap_current: newPlayer.ap_current,
-            ap_debt: newPlayer.ap_debt,
-            ap_last_update: newPlayer.ap_last_update,
-            last_action_at: new Date(),
-            status: newPlayer.status,
+            apCurrent: newPlayer.ap_current,
+            apDebt: newPlayer.ap_debt,
+            apLastUpdate: newPlayer.ap_last_update,
+            lastActionAt: new Date(),
+            status: newPlayer.status.toUpperCase() as PrismaPlayerStatus,
         });
 
         await db.updateInstanceCombatState(instance_id, newCombatState);
@@ -176,7 +181,15 @@ export async function POST(request: NextRequest) {
                 event.event_type,
                 event.player_id || undefined
             );
-            savedEvents.push(saved as GameEvent);
+            // Map Prisma event (camelCase) to GameEvent (snake_case)
+            savedEvents.push({
+                id: saved.id,
+                instance_id: saved.instanceId,
+                player_id: saved.playerId,
+                message: saved.message,
+                event_type: saved.eventType.toLowerCase() as GameEvent['event_type'],
+                created_at: saved.createdAt,
+            });
         }
 
         // Build response
@@ -193,6 +206,8 @@ export async function POST(request: NextRequest) {
             player_state: {
                 hp: newPlayer.hp,
                 hp_max: newPlayer.hp_max,
+                mp: newPlayer.mp,
+                mp_max: newPlayer.mp_max,
                 ap: Math.floor(currentAP),
                 ap_max: newPlayer.ap_max,
                 ap_state: getAPState(newPlayer),

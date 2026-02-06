@@ -29,8 +29,8 @@ export async function GET(request: NextRequest) {
 
         return NextResponse.json({
             id: instance.id,
-            zone_type: instance.zone_type,
-            combat_state: instance.combat_state,
+            zone_type: instance.zoneType,
+            combat_state: instance.combatState,
             players: players.map(p => ({
                 id: p.id,
                 name: p.name,
@@ -96,7 +96,7 @@ async function createInstance(zoneType: string) {
     return NextResponse.json({
         success: true,
         instance_id: instance.id,
-        zone_type: instance.zone_type,
+        zone_type: instance.zoneType,
     });
 }
 

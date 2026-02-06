@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Terminal, CombatLog, CommandInput, StatusBar } from '@/components';
 import { ActionType, PlayerStateSnapshot } from '@/lib/game';
 
@@ -32,6 +32,18 @@ export default function GamePage() {
         const result = await response.json();
         setPlayerState(result.player_state);
     }, []);
+
+    useEffect(() => {
+        if (connectionStatus === 'connected') {
+            fetch(`/api/player?id=${DEMO_PLAYER_ID}`)
+                .then(res => {
+                    if (res.ok) return res.json();
+                    throw new Error('Failed to fetch player state');
+                })
+                .then(data => setPlayerState(data))
+                .catch(console.error);
+        }
+    }, [connectionStatus]);
 
     const handleConnectionChange = useCallback((status: 'connected' | 'disconnected' | 'connecting') => {
         setConnectionStatus(status);

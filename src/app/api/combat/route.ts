@@ -36,8 +36,8 @@ export async function GET(request: NextRequest) {
 
         return NextResponse.json({
             instance_id: instance.id,
-            zone_type: instance.zone_type,
-            combat_state: instance.combat_state,
+            zone_type: instance.zoneType,
+            combat_state: instance.combatState,
         });
     } catch (error) {
         console.error('Error fetching combat:', error);

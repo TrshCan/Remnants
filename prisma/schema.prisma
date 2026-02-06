@@ -1,0 +1,204 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================
+// PLAYER (User)
+// ============================================
+// ============================================
+// ACCOUNT (Auth)
+// ============================================
+model Account {
+  id           String      @id @default(uuid())
+  email        String      @unique
+  passwordHash String      @map("password_hash")
+  createdAt    DateTime    @default(now()) @map("created_at")
+  updatedAt    DateTime    @updatedAt @map("updated_at")
+  characters   Character[]
+
+  @@map("accounts")
+}
+
+// ============================================
+// CHARACTER (Game Entity)
+// ============================================
+model Character {
+  id              String   @id @default(uuid())
+  accountId       String   @map("account_id")
+  account         Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  
+  name            String   @unique @db.VarChar(50)
+  
+  // Dynamic State
+  hp              Int      @default(100)
+  hpMax           Int      @default(100) @map("hp_max")
+  mp              Int      @default(20)
+  mpMax           Int      @default(20) @map("mp_max")
+  apCurrent       Float    @default(3) @map("ap_current")
+  apMax           Int      @default(3) @map("ap_max")
+  apDebt          Float    @default(0) @map("ap_debt")
+  apLastUpdate    DateTime @default(now()) @map("ap_last_update")
+  
+  // Rate limiting
+  lastActionAt    DateTime? @map("last_action_at")
+  
+  // Status
+  status          PlayerStatus @default(ALIVE)
+  
+  // Timestamps
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  combatStats     CombatStats?
+  inventory       InventoryItem[]
+  instances       InstancePlayer[]
+  flags           PlayerFlag[]
+  events          Event[]
+
+  @@map("characters")
+}
+
+// ============================================
+// COMBAT STATS
+// ============================================
+model CombatStats {
+  id            String    @id @default(uuid())
+  characterId   String    @unique @map("character_id")
+  character     Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+
+  // Progression
+  level         Int       @default(1)
+  experience    Int       @default(0)
+
+  // Attributes
+  strength      Int       @default(10)
+  dexterity     Int       @default(10)
+  constitution  Int       @default(10)
+  intelligence  Int       @default(10)
+
+  // Derived (Base values, can be modified by gear/buffs)
+  attackPower   Int       @default(10) @map("attack_power")
+  defense       Int       @default(0)
+  critChance    Float     @default(0.05) @map("crit_chance")
+  critDamage    Float     @default(1.5) @map("crit_damage")
+  
+  @@map("combat_stats")
+}
+
+// ============================================
+// INVENTORY
+// ============================================
+model InventoryItem {
+  id          String    @id @default(uuid())
+  characterId String    @map("character_id")
+  character   Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+
+  itemId      String    @map("item_id")
+  quantity    Int       @default(1)
+  slot        String?   // Equippable slot or null
+  metadata    Json?     // Durability, variant data, etc.
+
+  @@index([characterId])
+  @@map("inventory_items")
+}
+
+enum PlayerStatus {
+  ALIVE
+  DEAD
+  RESTING
+  IN_COMBAT
+}
+
+// ============================================
+// INSTANCE (Zone/Encounter)
+// ============================================
+model Instance {
+  id              String   @id @default(uuid())
+  zoneType        String   @map("zone_type") @db.VarChar(50)
+  
+  // Combat state stored as JSON
+  combatState     Json?    @map("combat_state")
+  
+  // Timestamps
+  createdAt       DateTime @default(now()) @map("created_at")
+  
+  // Relations
+  players         InstancePlayer[]
+  events          Event[]
+
+  @@map("instances")
+}
+
+// ============================================
+// INSTANCE_PLAYERS (Join table)
+// ============================================
+model InstancePlayer {
+  instanceId      String   @map("instance_id")
+  playerId        String   @map("player_id")
+  joinedAt        DateTime @default(now()) @map("joined_at")
+  
+  // Relations
+  instance        Instance @relation(fields: [instanceId], references: [id], onDelete: Cascade)
+  player          Character   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@id([instanceId, playerId])
+  @@index([playerId])
+  @@map("instance_players")
+}
+
+// ============================================
+// EVENTS (For SSE and history)
+// ============================================
+model Event {
+  id              String   @id @default(uuid())
+  instanceId      String   @map("instance_id")
+  playerId        String?  @map("player_id")
+  message         String   @db.Text
+  eventType       EventType @default(SYSTEM) @map("event_type")
+  
+  // Timestamps
+  createdAt       DateTime @default(now()) @map("created_at")
+  
+  // Relations
+  instance        Instance @relation(fields: [instanceId], references: [id], onDelete: Cascade)
+  player          Character?  @relation(fields: [playerId], references: [id], onDelete: SetNull)
+
+  @@index([instanceId, createdAt(sort: Desc)])
+  @@map("events")
+}
+
+enum EventType {
+  COMBAT
+  NARRATIVE
+  SYSTEM
+  PLAYER_ACTION
+  ENEMY_ACTION
+}
+
+// ============================================
+// PLAYER FLAGS (Narrative state)
+// ============================================
+model PlayerFlag {
+  id              String   @id @default(uuid())
+  playerId        String   @map("player_id")
+  flagKey         String   @map("flag_key") @db.VarChar(100)
+  flagValue       String?  @map("flag_value") @db.Text
+  
+  // Timestamps
+  createdAt       DateTime @default(now()) @map("created_at")
+  
+  // Relations
+  player          Character   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([playerId, flagKey])
+  @@index([playerId])
+  @@map("player_flags")
+}

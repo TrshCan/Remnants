@@ -4,6 +4,8 @@ export interface Player {
     name: string;
     hp: number;
     hp_max: number;
+    mp: number;
+    mp_max: number;
     ap_current: number;
     ap_max: number;
     ap_debt: number;
@@ -17,7 +19,18 @@ export type PlayerStatus =
     | 'alive'
     | 'dead'
     | 'resting'
-    | 'in_combat';
+    | 'in_combat'
+    | 'ALIVE'
+    | 'DEAD'
+    | 'RESTING'
+    | 'IN_COMBAT';
+
+// Helper to normalize status for display
+export function normalizeStatus(status: string): 'alive' | 'dead' | 'resting' | 'in_combat' {
+    const lower = status.toLowerCase();
+    if (lower === 'in_combat') return 'in_combat';
+    return lower as 'alive' | 'dead' | 'resting';
+}
 
 // AP descriptive states (derived from numeric values)
 export type APState =
@@ -119,6 +132,8 @@ export interface ActionResponse {
 export interface PlayerStateSnapshot {
     hp: number;
     hp_max: number;
+    mp: number;
+    mp_max: number;
     ap: number;
     ap_max: number;
     ap_state: APState;

@@ -57,6 +57,12 @@ export default function StatusBar({ playerState }: StatusBarProps) {
                     {AP_NARRATIVES[ap_state]}
                 </span>
             </div>
+            <div className="stat">
+                <span className="stat-label">MP</span>
+                <span className="stat-value mid">
+                    {playerState.mp}/{playerState.mp_max}
+                </span>
+            </div>
             {status !== 'alive' && (
                 <div className="stat">
                     <span className="stat-label">Status</span>
