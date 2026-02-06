@@ -85,7 +85,11 @@ export type ActionType =
     | 'defend'
     | 'wait'
     | 'look'
-    | 'status';
+    | 'status'
+    | 'explore'
+    | 'inventory'
+    | 'use'
+    | 'talk';
 
 export interface PlayerAction {
     type: ActionType;
@@ -101,6 +105,10 @@ export const ACTION_COSTS: Record<ActionType, number> = {
     wait: 0,   // WAIT costs nothing, gives AP back
     look: 0,
     status: 0,
+    explore: 3,
+    inventory: 0,
+    use: 0,
+    talk: 0,
 };
 
 // Game events (for SSE and DB persistence)

@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { Terminal, CombatLog, CommandInput, StatusBar } from '@/components';
-import { ActionType, PlayerStateSnapshot } from '@/lib/game';
+import { ActionType, PlayerStateSnapshot, AP_SHORT_NARRATIVES } from '@/lib/game';
 
 // Demo instance and player IDs - in production, these come from auth/session
 const DEMO_INSTANCE_ID = 'demo-instance';
@@ -50,7 +50,11 @@ export default function GamePage() {
     }, []);
 
     return (
-        <Terminal title="REMNANTS" connectionStatus={connectionStatus}>
+        <Terminal
+            title="REMNANTS"
+            connectionStatus={connectionStatus}
+            statNarrative={playerState ? AP_SHORT_NARRATIVES[playerState.ap_state] : undefined}
+        >
             <CombatLog
                 instanceId={DEMO_INSTANCE_ID}
                 onConnectionChange={handleConnectionChange}

@@ -123,7 +123,33 @@ async function main() {
                 }
             }
         });
-        console.log('Added starter weapon');
+
+        await prisma.inventoryItem.create({
+            data: {
+                characterId: character.id,
+                itemId: 'health_stim',
+                quantity: 3,
+            }
+        });
+
+        await prisma.inventoryItem.create({
+            data: {
+                characterId: character.id,
+                itemId: 'ration_pack',
+                quantity: 5,
+            }
+        });
+
+        await prisma.inventoryItem.create({
+            data: {
+                characterId: character.id,
+                itemId: 'leather_vest',
+                quantity: 1,
+                slot: 'body',
+            }
+        });
+
+        console.log('Added starter items');
     }
 
     // 5. Add character to instance

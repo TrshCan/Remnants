@@ -20,7 +20,8 @@
   box-sizing: border-box;
 }
 
-html, body {
+html,
+body {
   height: 100%;
   background-color: var(--bg-primary);
   color: var(--text-primary);
@@ -81,11 +82,29 @@ html, body {
 .log-entry {
   padding: 0.25rem 0;
   animation: fadeIn 0.3s ease-in;
+  opacity: 0.5;
+  transition: opacity 0.3s ease;
+  white-space: pre-wrap;
+}
+
+.log-entry:hover {
+  opacity: 1;
+}
+
+.log-entry:last-child {
+  opacity: 1;
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(5px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .log-entry.combat {
@@ -199,8 +218,15 @@ html, body {
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 0.3; }
-  50% { opacity: 1; }
+
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+
+  50% {
+    opacity: 1;
+  }
 }
 
 /* Connection status */
@@ -226,4 +252,334 @@ html, body {
 .connection-dot.connecting {
   background-color: var(--warning);
   animation: pulse 0.5s infinite;
+}
+
+/* ============================================
+   INVENTORY
+   ============================================ */
+.inventory {
+  padding: 0.75rem 0;
+  border-top: 1px solid var(--border);
+}
+
+.inventory-header {
+  color: var(--accent);
+  font-size: 0.8rem;
+  margin-bottom: 0.5rem;
+  letter-spacing: 0.1em;
+}
+
+.inventory-empty {
+  color: var(--text-dim);
+  font-style: italic;
+}
+
+.inventory-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 0.5rem;
+}
+
+.inventory-item {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.inventory-item:hover {
+  background: var(--bg-primary);
+  border-color: var(--accent-dim);
+}
+
+.inventory-item.selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 8px rgba(212, 165, 116, 0.3);
+}
+
+.inventory-item.equipped::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 6px;
+  height: 6px;
+  background: var(--success);
+  border-radius: 50%;
+}
+
+.item-name {
+  font-size: 0.85rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.item-quantity {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+}
+
+.item-equipped {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  font-size: 0.6rem;
+  color: var(--success);
+}
+
+.item-details {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+}
+
+.item-details-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+.close-btn:hover {
+  color: var(--danger);
+}
+
+.item-description {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  margin-bottom: 0.5rem;
+}
+
+.item-type {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+}
+
+.item-stats {
+  font-size: 0.85rem;
+  color: var(--success);
+  margin-bottom: 0.5rem;
+}
+
+.item-effect {
+  font-size: 0.85rem;
+  color: var(--warning);
+  margin-bottom: 0.5rem;
+}
+
+.item-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.action-btn {
+  flex: 1;
+  padding: 0.4rem 0.75rem;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.action-btn:hover {
+  border-color: var(--accent);
+}
+
+.action-btn.use:hover {
+  border-color: var(--success);
+  color: var(--success);
+}
+
+.action-btn.equip:hover {
+  border-color: var(--warning);
+  color: var(--warning);
+}
+
+/* ============================================
+   NPC DIALOG
+   ============================================ */
+.npc-dialog {
+  padding: 1rem;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  margin: 0.5rem 0;
+}
+
+.npc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.npc-name {
+  color: var(--accent);
+  font-size: 1.1rem;
+  font-weight: bold;
+}
+
+.npc-type {
+  color: var(--text-dim);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+}
+
+.npc-portrait {
+  text-align: center;
+  margin-bottom: 0.5rem;
+}
+
+.ascii-portrait {
+  color: var(--accent-dim);
+  font-size: 0.75rem;
+  line-height: 1.2;
+}
+
+.npc-description {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-style: italic;
+  margin-bottom: 1rem;
+}
+
+.dialogue-box {
+  padding: 0.75rem;
+  background: var(--bg-tertiary);
+  border-left: 2px solid var(--accent);
+  margin-bottom: 1rem;
+}
+
+.dialogue-text {
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.dialogue-responses {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.response-btn {
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.response-btn:hover {
+  background: var(--bg-primary);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ============================================
+   ENEMY DISPLAY
+   ============================================ */
+.enemy-display {
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.enemy-header {
+  color: var(--danger);
+  font-size: 0.8rem;
+  margin-bottom: 0.5rem;
+  letter-spacing: 0.1em;
+}
+
+.enemy-list {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.enemy-card {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.5rem;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--danger);
+  border-left: 3px solid var(--danger);
+  min-width: 180px;
+}
+
+.enemy-ascii pre {
+  color: var(--danger);
+  font-size: 0.6rem;
+  line-height: 1;
+}
+
+.enemy-info {
+  flex: 1;
+}
+
+.enemy-name {
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  margin-bottom: 0.25rem;
+}
+
+.enemy-hp-bar {
+  height: 6px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  margin-bottom: 0.25rem;
+}
+
+.enemy-hp-fill {
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+.enemy-hp-text {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  margin-bottom: 0.25rem;
+}
+
+.enemy-intent {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.intent-attack {
+  color: var(--danger);
+}
+
+.intent-defend {
+  color: var(--success);
+}
+
+.intent-charge {
+  color: var(--warning);
+}
+
+.intent-wait {
+  color: var(--text-dim);
 }

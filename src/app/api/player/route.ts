@@ -11,10 +11,10 @@ import {
 } from '@/lib/game';
 import { getAPState, calculateCurrentAP } from '@/lib/game/ap';
 import { checkRateLimit } from '@/lib/game/ratelimit';
-import { resolveAction, PlayerData } from '@/lib/game/combat';
+import { resolveAction, resolveEnemyTurn, PlayerData } from '@/lib/game/combat';
 import { PlayerStatus as PrismaPlayerStatus } from '@prisma/client';
 
-const VALID_ACTIONS: ActionType[] = ['attack', 'defend', 'wait', 'look', 'status'];
+const VALID_ACTIONS: ActionType[] = ['attack', 'defend', 'wait', 'look', 'status', 'explore', 'inventory', 'use', 'talk'];
 
 /**
  * GET /api/player?id={playerId}
@@ -131,6 +131,8 @@ export async function POST(request: NextRequest) {
             name: player.name,
             hp: player.hp,
             hp_max: player.hpMax,
+            mp: player.mp,
+            mp_max: player.mpMax,
             ap_current: player.apCurrent,
             ap_max: player.apMax,
             ap_debt: player.apDebt,
@@ -154,15 +156,31 @@ export async function POST(request: NextRequest) {
         };
 
         // Resolve action
-        const { newPlayer, newCombatState, events } = resolveAction(
+        let { newPlayer, newCombatState, events } = resolveAction(
             playerAction,
             typedPlayer,
             combatState
         );
 
+        // If it's now ENEMY_TURN, process enemy actions immediately
+        if (newCombatState.phase === 'ENEMY_TURN') {
+            const enemyResult = resolveEnemyTurn(newPlayer, newCombatState);
+
+            // Update state with enemy results
+            newPlayer = enemyResult.newPlayer;
+            newCombatState = enemyResult.newCombatState;
+            events = [...events, ...enemyResult.events];
+
+            // Fixup events missing instance_id/player_id from resolveEnemyTurn
+            events.forEach(e => {
+                if (e.instance_id === 'n/a') e.instance_id = instance_id;
+            });
+        }
+
         // Persist changes (map back to Prisma camelCase)
         await db.updatePlayer(player_id, {
             hp: newPlayer.hp,
+            mp: newPlayer.mp,
             apCurrent: newPlayer.ap_current,
             apDebt: newPlayer.ap_debt,
             apLastUpdate: newPlayer.ap_last_update,

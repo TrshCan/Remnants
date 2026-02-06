@@ -8,13 +8,17 @@ interface CommandInputProps {
     disabled?: boolean;
 }
 
-const VALID_COMMANDS: ActionType[] = ['attack', 'defend', 'wait', 'look', 'status'];
+const VALID_COMMANDS: ActionType[] = ['attack', 'defend', 'wait', 'look', 'status', 'explore', 'inventory', 'use', 'talk'];
 const COMMAND_HELP: Record<ActionType, string> = {
     attack: 'Strike at your enemy (costs 2 AP)',
     defend: 'Raise your guard (costs 1 AP)',
     wait: 'Rest and recover AP (strategic)',
     look: 'Observe your surroundings',
     status: 'Check your condition',
+    explore: 'Search the area (costs 3 AP)',
+    inventory: 'View your items',
+    use: 'Use an item (use <item>)',
+    talk: 'Talk to an NPC (talk <name>)',
 };
 
 export default function CommandInput({ onCommand, disabled = false }: CommandInputProps) {

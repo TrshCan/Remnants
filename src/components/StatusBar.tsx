@@ -6,13 +6,7 @@ interface StatusBarProps {
     playerState: PlayerStateSnapshot | null;
 }
 
-const AP_NARRATIVES: Record<APState, string> = {
-    exhausted: 'Exhausted',
-    winded: 'Winded',
-    recovering: 'Recovering',
-    ready: 'Ready',
-    overextended: 'Overextended',
-};
+
 
 function getHealthClass(hp: number, maxHp: number): string {
     const ratio = hp / maxHp;
@@ -53,9 +47,7 @@ export default function StatusBar({ playerState }: StatusBarProps) {
                 <span className={`stat-value ${apClass}`}>
                     {ap}/{ap_max}
                 </span>
-                <span className="stat-narrative">
-                    {AP_NARRATIVES[ap_state]}
-                </span>
+
             </div>
             <div className="stat">
                 <span className="stat-label">MP</span>

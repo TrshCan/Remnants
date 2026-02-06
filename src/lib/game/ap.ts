@@ -153,6 +153,14 @@ export function getAPNarrative(state: APState): string {
     return narratives[state];
 }
 
+export const AP_SHORT_NARRATIVES: Record<APState, string> = {
+    exhausted: 'Exhausted',
+    winded: 'Winded',
+    recovering: 'Recovering',
+    ready: 'Ready',
+    overextended: 'Overextended',
+};
+
 // Internal narrative helpers
 function getOvercommitNarrative(debt: number): string {
     if (debt > 2) {
