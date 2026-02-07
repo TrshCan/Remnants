@@ -62,6 +62,7 @@ export interface CombatState {
     current_turn_index: number;
     enemies: Enemy[];
     round: number;
+    currentZone?: string;  // Current zone ID
 }
 
 export interface Enemy {

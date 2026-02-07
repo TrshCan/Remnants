@@ -5,3 +5,4 @@ export { default as StatusBar } from './StatusBar';
 export { default as Inventory } from './Inventory';
 export { default as NPCDialog } from './NPCDialog';
 export { default as EnemyDisplay } from './EnemyDisplay';
+export { default as ActionButtons } from './ActionButtons';

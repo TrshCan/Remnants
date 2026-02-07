@@ -15,6 +15,7 @@ import {
 } from './narratives';
 import { EXPLORE_MESSAGES, MONSTER_NAMES } from './explore_narratives';
 import { getRandomEnemy, ENEMIES } from './data';
+import { getRandomZone, getRandomWelcome, ZoneDefinition, DANGER_ZONES, SAFE_ZONES } from './zones';
 
 // Player data required for combat (works with db records)
 export interface PlayerData extends APData {
@@ -386,18 +387,49 @@ function resolveExplore(
         });
     }
 
-    // Roll for outcome
+    // Roll for outcome - first check for zone transition
     const roll = Math.random();
     let newCombatState = { ...combatState };
 
     // Outcome probabilities:
-    // 0.0 - 0.4: Nothing (40%)
-    // 0.4 - 0.6: Item (20%)
-    // 0.6 - 0.7: Trap (10%)
-    // 0.7 - 0.9: Encounter (20%)
-    // 0.9 - 1.0: Ambush (10%)
+    // 0.0 - 0.25: Zone transition (25%)
+    // 0.25 - 0.45: Nothing (20%)
+    // 0.45 - 0.60: Item (15%)
+    // 0.60 - 0.70: Trap (10%)
+    // 0.70 - 0.90: Encounter (20%)
+    // 0.90 - 1.0: Ambush (10%)
 
-    if (roll < 0.4) {
+    if (roll < 0.25) {
+        // Zone transition
+        const newZone = getRandomZone();
+        const welcomeMsg = getRandomWelcome(newZone);
+
+        events.push({
+            instance_id: action.instance_id,
+            player_id: action.player_id,
+            message: `\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n  📍 ${newZone.name.toUpperCase()}\n  ${newZone.type === 'safe' ? '🛡️ Safe Zone' : '⚠️ Danger Zone'}\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
+            event_type: 'system',
+        });
+        events.push({
+            instance_id: action.instance_id,
+            player_id: action.player_id,
+            message: welcomeMsg,
+            event_type: 'narrative',
+        });
+        events.push({
+            instance_id: action.instance_id,
+            player_id: action.player_id,
+            message: newZone.description,
+            event_type: 'narrative',
+        });
+
+        // Update combat state with new zone
+        newCombatState = {
+            ...combatState,
+            currentZone: newZone.id,
+        };
+
+    } else if (roll < 0.45) {
         // Nothing
         events.push({
             instance_id: action.instance_id,
@@ -406,7 +438,7 @@ function resolveExplore(
             event_type: 'narrative',
         });
 
-    } else if (roll < 0.6) {
+    } else if (roll < 0.60) {
         // Item (Flavor only for now)
         events.push({
             instance_id: action.instance_id,
@@ -416,7 +448,7 @@ function resolveExplore(
         });
         // TODO: Give actual item
 
-    } else if (roll < 0.7) {
+    } else if (roll < 0.70) {
         // Trap
         const damage = 5 + Math.floor(Math.random() * 5);
         updatedPlayer.hp = Math.max(0, updatedPlayer.hp - damage);
@@ -436,7 +468,7 @@ function resolveExplore(
 
     } else {
         // Encounter or Ambush
-        const isAmbush = roll >= 0.9;
+        const isAmbush = roll >= 0.90;
         const enemyCount = 1 + Math.floor(Math.random() * 2); // 1-2 enemies
         const enemies: Enemy[] = [];
 

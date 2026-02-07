@@ -13,6 +13,7 @@ import { getAPState, calculateCurrentAP } from '@/lib/game/ap';
 import { checkRateLimit } from '@/lib/game/ratelimit';
 import { resolveAction, resolveEnemyTurn, PlayerData } from '@/lib/game/combat';
 import { PlayerStatus as PrismaPlayerStatus } from '@prisma/client';
+import { getItem } from '@/lib/game/data';
 
 const VALID_ACTIONS: ActionType[] = ['attack', 'defend', 'wait', 'look', 'status', 'explore', 'inventory', 'use', 'talk'];
 
@@ -154,6 +155,75 @@ export async function POST(request: NextRequest) {
             player_id,
             instance_id,
         };
+
+        // Special handling for inventory command - show actual items
+        if (action === 'inventory') {
+            const inventory = await db.getInventory(player_id);
+            const inventoryEvents: Omit<GameEvent, 'id' | 'created_at'>[] = [
+                {
+                    instance_id,
+                    player_id,
+                    message: '━━━━━ INVENTORY ━━━━━',
+                    event_type: 'system',
+                }
+            ];
+
+            if (inventory.length === 0) {
+                inventoryEvents.push({
+                    instance_id,
+                    player_id,
+                    message: 'Your pack is empty.',
+                    event_type: 'narrative',
+                });
+            } else {
+                for (const inv of inventory) {
+                    const itemDef = getItem(inv.itemId);
+                    const name = itemDef?.name || inv.itemId;
+                    const qty = inv.quantity > 1 ? ` x${inv.quantity}` : '';
+                    const equipped = inv.slot ? ' [EQUIPPED]' : '';
+                    const desc = itemDef?.description || '';
+                    inventoryEvents.push({
+                        instance_id,
+                        player_id,
+                        message: `• ${name}${qty}${equipped}${desc ? ' - ' + desc : ''}`,
+                        event_type: 'narrative',
+                    });
+                }
+            }
+            inventoryEvents.push({
+                instance_id,
+                player_id,
+                message: '━━━━━━━━━━━━━━━━━━━━━',
+                event_type: 'system',
+            });
+
+            // Persist events
+            for (const event of inventoryEvents) {
+                await db.createEvent(
+                    event.instance_id,
+                    event.message,
+                    event.event_type.toUpperCase(),
+                    event.player_id || undefined
+                );
+            }
+
+            return NextResponse.json({
+                success: true,
+                events: inventoryEvents,
+                player: {
+                    id: player.id,
+                    name: player.name,
+                    hp: player.hp,
+                    hp_max: player.hpMax,
+                    mp: player.mp,
+                    mp_max: player.mpMax,
+                    ap_current: player.apCurrent,
+                    ap_max: player.apMax,
+                    status: player.status,
+                },
+                combat: combatState,
+            });
+        }
 
         // Resolve action
         let { newPlayer, newCombatState, events } = resolveAction(

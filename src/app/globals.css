@@ -583,3 +583,88 @@ body {
 .intent-wait {
   color: var(--text-dim);
 }
+
+/* ============================================
+   ACTION BUTTONS
+   ============================================ */
+.action-buttons {
+  padding: 1rem 0;
+  border-top: 1px solid var(--border);
+}
+
+.action-buttons-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 0.75rem;
+}
+
+.action-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem 0.75rem;
+  background: linear-gradient(180deg, var(--bg-tertiary) 0%, var(--bg-primary) 100%);
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 80px;
+}
+
+.action-btn:hover:not(.disabled) {
+  background: linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+  border-color: var(--accent);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(212, 165, 116, 0.2);
+}
+
+.action-btn:active:not(.disabled) {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+.action-btn.active {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+
+.action-btn.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  border-color: var(--text-dim);
+}
+
+.action-icon {
+  font-size: 1.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.action-label {
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.action-cost {
+  font-size: 0.7rem;
+  color: var(--warning);
+  margin-top: 0.25rem;
+}
+
+.action-cost.insufficient {
+  color: var(--danger);
+}
+
+.action-processing,
+.action-waiting {
+  text-align: center;
+  padding: 0.5rem;
+  margin-top: 0.5rem;
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  animation: pulse 1s infinite;
+}
